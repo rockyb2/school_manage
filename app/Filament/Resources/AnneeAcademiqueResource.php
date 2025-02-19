@@ -28,7 +28,7 @@ class AnneeAcademiqueResource extends Resource
         return $form
             ->schema([
                 TextInput::make('annee')
-                ->numeric()
+
                 ->required(),
 
             ]);

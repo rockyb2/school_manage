@@ -21,4 +21,9 @@ class Classe extends Model
     return $this->belongsTo(Filiere::class);
 }
 
+public function cours()
+{
+    return $this->hasMany(Cours::class);
+}
+
 }

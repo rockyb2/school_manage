@@ -6,11 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Notifications\Notifiable;
 
 class Enseignant extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\EnseignantFactory> */
-    use HasFactory;
+    use HasFactory,Notifiable;
+
     protected $fillable = [
         'nom',
         'prenoms',
@@ -41,5 +43,17 @@ class Enseignant extends Authenticatable
     public function cours(): HasMany
     {
         return $this->hasMany(Cours::class);
+    }
+
+    /**
+     * Route notifications for the mail channel.
+     *
+     * @param  \Illuminate\Notifications\Notification  $notification
+     * @return string
+     */
+    public function routeNotificationForMail($notification)
+    {
+        // Retourne l'adresse email de l'enseignant
+        return $this->email;
     }
 }

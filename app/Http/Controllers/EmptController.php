@@ -1,52 +1,77 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Cours;
-use App\Models\Emplois_Du_Temps;
+use Illuminate\Support\Facades\DB;
+use App\Models\Annee_academique;
+use App\Models\Semestre;
 
 class EmptController extends Controller
 {
-    public function genererEmploisDuTemps(Request $request)
+    public function index()
     {
-        // Valider les données du formulaire
+
+        $anneesAcademiques = Annee_academique::all();
+        $semestres = Semestre::all();
+
+        return view('filament.pages.emplois_du_temps', compact('anneesAcademiques', 'semestres'));
+    }
+
+    public function generateSchedule(Request $request)
+    {
         $request->validate([
-            'semestre_id' => 'required|exists:semestre,id',
-            'annee_academique_id' => 'required|exists:annee_academique,id',
+            'annee_academique_id' => 'required',
+            'semestre_id' => 'required',
         ]);
 
-        // Récupérer le semestre et l'année académique
-        $semestreId = $request->semestre_id;
-        $anneeAcademiqueId = $request->annee_academique_id;
+        $results = DB::table('emplois_du_temps as edt')
+            ->join('cours as c', 'edt.cours_id', '=', 'c.id')
+            ->join('classes as cl', 'c.classe_id', '=', 'cl.id')
+            ->join('matieres as m', 'c.matiere_id', '=', 'm.id')
+            ->join('enseignants as e', 'c.enseignant_id', '=', 'e.id')
+            ->join('salles as s', 'c.salles_id', '=', 's.id')
+            ->join('annee_academique as a', 'edt.annee_academique_id', '=', 'a.id')
+            ->join('semestre as sem', 'edt.semestre_id', '=', 'sem.id')
+            ->where('edt.annee_academique_id', $request->annee_academique_id)
+            ->where('edt.semestre_id', $request->semestre_id)
+            ->select(
+                'c.*',
+                'cl.nom_classe as classe_nom',
+                'm.nom_matiere as matiere_nom',
+                'e.nom as enseignant_nom',
+                'e.email as enseignant_email',
+                's.nom_salle as salle_nom',
+                'a.annee as annee_academique',
+                'sem.nom_semestre as semestre_nom',
+                'c.jour',
+                'c.heure_debut',
+                'c.heure_fin'
+            )
+            ->get();
 
-        // Récupérer tous les cours disponibles
-        $cours = Cours::all();
+        $emplois_du_temps = [];
 
-        // Générer les emplois du temps pour chaque cours
-        foreach ($cours as $cour) {
-            // Vérifier les conflits
-            $conflict = Emplois_Du_Temps::where('jour', $cour->jour)
-                ->where('heure_debut', '<=', $cour->heure_fin)
-                ->where('heure_fin', '>=', $cour->heure_debut)
-                ->whereHas('cours', function ($query) use ($cour) {
-                    $query->where('classe_id', $cour->classe_id)
-                        ->orWhere('matiere_id', $cour->matiere_id)
-                        ->orWhere('enseignant_id', $cour->enseignant_id)
-                        ->orWhere('salles_id', $cour->salles_id);
-                })->first();
-
-            // Si aucun conflit n'est détecté, créer l'emploi du temps
-            if (!$conflict) {
-                Emplois_Du_Temps::create([
-                    'cours_id' => $cour->id,
-                    'semestre_id' => $semestreId,
-                    'annee_academique_id' => $anneeAcademiqueId,
-
-                ]);
-            }
+        foreach ($results as $cour) {
+            $horaire = $cour->heure_debut . '-' . $cour->heure_fin;
+            $emplois_du_temps[$cour->classe_nom][$cour->jour][$horaire][] = $cour;
         }
 
-        // Retourner une notification de succès
-        return redirect()->back()->with('success', 'Les emplois du temps ont été générés avec succès.');
+        $anneeSemestre = [];
+if ($results->isNotEmpty()) {
+    $first = $results->first();
+    $anneeSemestre = [
+        'annee_academique' => $first->annee_academique ?? '',
+        'semestre_nom' => $first->semestre_nom ?? '',
+    ];
+}
+
+        return view('filament.pages.emplois_du_temps', [
+            'emploisDuTemps' => $emplois_du_temps,
+            'anneeSemestre' => $anneeSemestre,
+            'jours' => ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
+            'anneesAcademiques' => Annee_academique::pluck('annee', 'id')->toArray(), // Ajouté ici
+            'semestres' => Semestre::pluck('nom_semestre', 'id')->toArray(), // Ajouté ici
+        ]);
     }
 }

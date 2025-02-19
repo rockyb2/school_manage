@@ -12,4 +12,9 @@ class Matieres extends Model
     protected $fillable=[
         'nom_matiere'
     ];
+
+    public function cours()
+    {
+        return $this->hasMany(Cours::class);
+    }
 }

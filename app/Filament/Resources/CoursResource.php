@@ -20,6 +20,7 @@ use Filament\Forms\Components\TimePicker;
 use App\Models\Enseignant;
 use App\Models\salles;
 use Filament\Tables\Actions\ActionGroup;
+use Closure;
 
 class CoursResource extends Resource
 {
@@ -36,12 +37,17 @@ class CoursResource extends Resource
 
             Select::make('classe_id')
                 ->label('Classe')
-                ->relationship('classes', 'nom_classe') // Relation correcte
+                ->relationship('classes', 'nom_classe')
+                ->rules([
+                    function ($get) {
+                        return self::createConflictValidator($get);
+                    },
+                ])
                 ->required(),
 
             Select::make('matiere_id')
                 ->label('Matière')
-                ->relationship('matieres', 'nom_matiere') // Relation correcte
+                ->relationship('matieres', 'nom_matiere')
                 ->required(),
 
                 Select::make('jour')
@@ -56,6 +62,11 @@ class CoursResource extends Resource
                 ])
                 ->reactive()
                 ->afterStateUpdated(fn (callable $set) =>$set('enseignant_id',null))
+                ->rules([
+                    function ($get) {
+                        return self::createConflictValidator($get);
+                    },
+                ])
                 ->placeholder('Choisir un jour'),
 
 
@@ -75,6 +86,11 @@ class CoursResource extends Resource
                 ])
                 ->reactive()
                 ->afterStateUpdated(fn (callable $set) => $set('enseignant_id',null))
+                ->rules([
+                    function ($get) {
+                        return self::createConflictValidator($get);
+                    },
+                ])
                 ->default('08:00'),
 
                 Select::make('heure_fin')
@@ -93,6 +109,11 @@ class CoursResource extends Resource
                 ])
                 ->reactive()
                 ->afterStateUpdated(fn (callable $set) => $set('enseignant_id',null))
+                ->rules([
+                    function ($get) {
+                        return self::createConflictValidator($get);
+                    },
+                ])
                 ->default('08:30'),
 
             Select::make('enseignant_id')
@@ -168,6 +189,30 @@ class CoursResource extends Resource
             ]);
     }
 
+    protected static function createConflictValidator($get): Closure
+{
+    return function (string $attribute, $value, Closure $fail) use ($get) {
+        $classe_id = $get('classe_id');
+        $jour = $get('jour');
+        $heure_debut = $get('heure_debut');
+        $heure_fin = $get('heure_fin');
+
+        if (!$classe_id || !$jour || !$heure_debut || !$heure_fin) {
+            return;
+        }
+
+        $conflict = Cours::where('classe_id', $classe_id)
+            ->where('jour', $jour)
+            ->where(function ($query) use ($heure_debut, $heure_fin) {
+                $query->where('heure_debut', '<', $heure_fin)
+                      ->where('heure_fin', '>', $heure_debut);
+            })->exists();
+
+        if ($conflict) {
+            $fail("Un cours existe déjà pour cette classe pendant ce créneau horaire.");
+        }
+    };
+}
     public static function table(Table $table): Table
     {
         return $table

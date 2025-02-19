@@ -9,7 +9,7 @@
 </head>
 <body class="flex h-full">
     <!-- Barre latérale -->
-    <aside class="w-1/4 bg-gray-800 text-white p-4">
+    <aside class="w-1/5 bg-gray-800 text-white p-4 h-screen">
         <h2 class="text-2xl font-bold mb-4">Menu</h2>
         <nav>
             <ul>

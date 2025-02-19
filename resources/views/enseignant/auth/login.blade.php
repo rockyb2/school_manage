@@ -20,6 +20,9 @@
         <form action="{{route('login')}}" method="post">
             @csrf
             <div class="mb-4">
+                <input type="email" name="email" id="email" class="outline-none border-b-2 w-full p-2" placeholder="email" required>
+            </div>
+            <div class="mb-4">
                 <input type="password" name="mot_de_passe" id="password" class="outline-none border-b-2 w-full p-2" placeholder="mot de passe" required>
             </div>
             <button type="submit" class="text-center">Se connecter</button>
