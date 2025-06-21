@@ -234,6 +234,7 @@ class CoursResource extends Resource
                     ->searchable(),
                 TextColumn::make('salles.nom_salle')
                     ->searchable(),
+
             ])
             ->filters([
                 //

@@ -54,7 +54,13 @@ public function login(Request $request)
         if (!$enseignant) {
             return redirect()->route('login')->withErrors(['message' => 'Veuillez vous connecter.']);
         }
-        return view('enseignant.dashboard', compact('enseignant'));
+
+        // Calcul du total de cours
+        $totalCours = DB::table('cours')
+            ->where('enseignant_id', $enseignant->id)
+            ->count();
+
+        return view('enseignant.dashboard', compact('enseignant', 'totalCours'));
     }
 
     public function logout(Request $request)
@@ -153,4 +159,39 @@ public function login(Request $request)
 
         return view('enseignant.emplois_du_temps', compact('enseignant', 'emploisDuTemps', 'anneeSemestre', 'jours'));
     }
+
+    public function getTotalCour()
+    {
+        $enseignant = session('enseignant');
+        if (!$enseignant) {
+            return redirect()->route('login')->withErrors(['message' => 'Veuillez vous connecter.']);
+        }
+
+        $totalCours = DB::table('cours')
+            ->where('enseignant_id', $enseignant->id)
+            ->count();
+
+        return response()->json(['total_cours' => $totalCours]);
+
+    }
+
+    public function getListClasses()
+    {
+        $enseignant = session('enseignant');
+        if (!$enseignant) {
+            return redirect()->route('login')->withErrors(['message' => 'Veuillez vous connecter.']);
+        }
+
+        $classes = DB::table('classes')
+            ->join('cours', 'classes.id', '=', 'cours.classe_id')
+            ->where('cours.enseignant_id', $enseignant->id)
+            ->select('classes.*')
+            ->distinct()
+            ->get();
+
+        return view('enseignant.classes_list', compact('classes'));
+    }
+
+
+
 }

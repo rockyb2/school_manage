@@ -45,9 +45,7 @@ class EmploisDuTemps extends Page implements Forms\Contracts\HasForms
     public function getActions(): array
     {
         return [
-            Action::make('generate')
-            ->label('Générer l\'emploi du temps')
-            ->action('generateSchedule'),
+
         ];
     }
 

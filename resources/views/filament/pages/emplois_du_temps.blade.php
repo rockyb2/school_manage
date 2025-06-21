@@ -1,11 +1,20 @@
 <!-- filepath: /c:/10projetlaravel/school_manage/resources/views/filament/pages/emplois-du-temps.blade.php -->
 <x-filament::page>
     <div class="container mx-auto p-4">
-        <h1 class="text-3xl font-bold mb-4 text-blue-600 dark:text-blue-400">Emplois du Temps</h1>
 
         <!-- Affichage du formulaire généré par Filament -->
-        <div class="bg-neutral-700 shadow-md rounded-lg p-6 mb-6">
-            {{ $this->form }}
+        <div class="bg-neutral-700 shadow-md rounded-lg p-6 mb-6 text-white">
+            <form wire:submit.prevent="generateSchedule">
+                {{ $this->form }}
+
+                <x-filament::button
+                    type="submit"
+                    class="!text-white hover:!text-red-800 mt-2 bg-slate-400"
+                    icon="heroicon-o-calendar"
+                    icon-class="text-red-500 hover:text-red-700"
+                >Générer
+            </x-filament::button>
+            </form>
         </div>
 
         @if(!empty($emploisDuTemps))
@@ -13,7 +22,7 @@
                 Emplois du Temps pour {{ $anneeSemestre['annee_academique'] ?? '' }} - {{ $anneeSemestre['semestre_nom'] ?? '' }}
             </h2>
 
-            <a href="{{ route('generate.pdf') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            <a href="{{ route('generate.pdf') }}" class="bg-red-500 hover:bg-blue-700 text-white font-bold py-2 px-4 mr-3 rounded">
                 Télécharger en PDF
             </a>
             <a href="{{ route('send.emplois_du_temps_notification') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"> Envoyer par mail</a>
@@ -26,7 +35,7 @@
                             <tr>
                                 <th class="px-4 py-2 border-b">Horaire</th>
                                 @foreach($jours as $jour)
-                                    <th class="px-4 py-2 border-b">{{ $jour }}</th>
+                                    <th class="px-4 py-2 border-b border-l">{{ $jour }}</th>
                                 @endforeach
                             </tr>
                         </thead>
@@ -38,7 +47,7 @@
                                 <tr>
                                     <td class="px-4 py-2 border-b">{{ $horaire }}</td>
                                     @foreach($jours as $jour)
-                                        <td class="px-4 py-2 border-b">
+                                        <td class="px-4 py-2 border-b border-l">
                                             @if(isset($emplois[$jour][$horaire]))
                                                 @foreach($emplois[$jour][$horaire] as $cour)
                                                     <div class="mb-2">

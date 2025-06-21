@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <title></title>
     @vite('resources/css/app.css')
+
+
 </head>
-<body class=" text-black ">
+<body class="  ">
     {{ $slot }}
 </body>
 </html>

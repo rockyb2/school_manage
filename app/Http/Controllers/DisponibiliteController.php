@@ -63,4 +63,31 @@ class DisponibiliteController extends Controller
         }
         return redirect()->route('disponibilite.index')->with('success', 'Disponibilité ajoutée avec succès');
     }
+
+    public function destroy(Disponibilite $disponibilite)
+    {
+        $disponibilite->delete();
+        return redirect()->route('disponibilite.index')->with('success', 'Disponibilité supprimée avec succès');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'jour' => 'required',
+            'periode' => 'required',
+        ]);
+
+        $enseignant = session('enseignant');
+        if (!$enseignant) {
+            return redirect()->route('login')->withErrors(['message' => 'Veuillez vous connecter.']);
+        }
+
+        $disponibilite = Disponibilite::findOrFail($id);
+        $disponibilite->update([
+            'Jour' => $request->jour,
+            'periode' => $request->periode
+        ]);
+
+        return redirect()->route('disponibilite.index')->with('success', 'Disponibilité modifiée avec succès');
+    }
 }

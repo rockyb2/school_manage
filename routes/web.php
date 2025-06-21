@@ -5,7 +5,9 @@ use App\Http\Controllers\DisponibiliteController;
 use App\Http\Controllers\EmptController;
 use App\Http\Middleware\EnsureEnseignantIsAuthenticated;
 use App\Http\Controllers\PdfController;
-
+use App\Http\Controllers\CompositionController;
+use App\Models\Classe;
+use App\Models\Matieres;
 
 Route::get('/', function () {
     return view('filament.index');
@@ -27,8 +29,24 @@ Route::get('/enseignant/dashboard', function () {
 Route::get('/enseignant/disponibilite', [DisponibiliteController::class, 'index'])->name('disponibilite.index');
 Route::get('/enseignant/disponibilite/create', [DisponibiliteController::class, 'create'])->name('disponibilite.create');
 Route::post('/enseignant/disponibilite', [DisponibiliteController::class, 'store'])->name('disponibilite.store');
+Route::resource('disponibilite', DisponibiliteController::class);
 
 Route::get('/enseignant/emploi-du-temps', [EnseignantController::class, 'downloadEmploiDuTemps'])->name('enseignant.emploi_du_temps_pdf');
 Route::get('/send-emplois-du-temps-notification', [EnseignantController::class, 'sendEmploisDuTempsNotification'])->name('send.emplois_du_temps_notification');
 Route::get('/enseignant.emplois_du_temps', [EnseignantController::class, 'showEmploisDuTemps'])->name('emplois_du_temps');
 Route::get('/generate-pdf', [PdfController::class, 'generatePdf'])->name('generate.pdf');
+
+// ROUTE pour la fiche de note de l'enseignant
+Route::get('/enseignant/fiche_note',function(){
+    $enseignant = session('enseignant');
+    if (!$enseignant) {
+        return redirect()->route('enseignant.auth.login')->with('error', 'Veuillez vous connecter d\'abord.');
+    }
+
+    $classes = Classe::all();
+    $matieres = Matieres::all();
+
+    return view('enseignant.fiche_note', compact('enseignant', 'matieres', 'classes'));
+})->name('create');
+Route::get('/enseignant/composition/index', [CompositionController::class, 'index'])->name('composition.index');
+Route::post('/enseignant/composition', [CompositionController::class, 'store'])->name('composition.store');

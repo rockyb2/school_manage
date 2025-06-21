@@ -26,4 +26,9 @@ public function cours()
     return $this->hasMany(Cours::class);
 }
 
+public function etudiants()
+{
+    return $this->hasMany(Etudiants::class);
+}
+
 }
