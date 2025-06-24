@@ -17,8 +17,8 @@ class CompositionController extends Controller
         if (!$enseignant) {
             return redirect()->route('login')->withErrors(['message' => 'Veuillez vous connecter.']);
         }
-        $composition = Compositions::where('enseignant_id', $enseignant->id)->get();
-        return view('enseignant.composition.index', compact('composition', 'enseignant'));
+        $compositions = Compositions::where('enseignant_id', $enseignant->id)->get();
+        return view('enseignant.composition.index', compact('compositions', 'enseignant'));
     }
     public function store(Request $request)
     {
@@ -31,18 +31,52 @@ class CompositionController extends Controller
             'matiere_id' => 'required|exists:matieres,id',
         ]);
 
-        $enseignant = Auth::guard('enseignant')->user();
+        $enseignant = session('enseignant');
+        if (!$enseignant) {
+            return redirect()->route('login')->withErrors(['message' => 'Veuillez vous connecter.']);
+        }
+
 
         $composition = Compositions::create([
             'titre' => $request->titre,
-            'date' => $request->date,
+            'date_composition' => $request->date,
             'type' => $request->type,
-            'enseignant_id' => $request->enseignant_id,
+            'enseignant_id' => $enseignant->id,
             'classe_id' => $request->classe_id,
             'matiere_id' => $request->matiere_id,
         ]);
 
-        return redirect()->route('enseignant.composition.index')
+        return redirect()->route('composition.index')
         ->with('success', 'Composition créée avec succès.');
+    }
+
+    public function update(Request $request, Compositions $composition)
+    {
+        $request->validate([
+            'titre' => 'required|string|max:255',
+            'date' => 'required|date',
+            'type' => 'required|in:examen,composition',
+            'classe_id' => 'required|exists:classes,id',
+            'matiere_id' => 'required|exists:matieres,id',
+        ]);
+
+        $composition->update([
+            'titre' => $request->titre,
+            'date_composition' => $request->date,
+            'type' => $request->type,
+            'classe_id' => $request->classe_id,
+            'matiere_id' => $request->matiere_id,
+        ]);
+
+        return redirect()->route('composition.index')->with('success', 'Composition mise à jour avec succès.');
+    }
+
+
+    public function destroy(Compositions $composition)
+    {
+
+
+        $composition->delete();
+        return redirect()->route('composition.index')->with('success', 'Composition supprimée avec succès.');
     }
 }

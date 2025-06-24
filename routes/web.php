@@ -8,6 +8,7 @@ use App\Http\Controllers\PdfController;
 use App\Http\Controllers\CompositionController;
 use App\Models\Classe;
 use App\Models\Matieres;
+use App\Livewire\CompositionCrud;
 
 Route::get('/', function () {
     return view('filament.index');
@@ -36,17 +37,16 @@ Route::get('/send-emplois-du-temps-notification', [EnseignantController::class, 
 Route::get('/enseignant.emplois_du_temps', [EnseignantController::class, 'showEmploisDuTemps'])->name('emplois_du_temps');
 Route::get('/generate-pdf', [PdfController::class, 'generatePdf'])->name('generate.pdf');
 
-// ROUTE pour la fiche de note de l'enseignant
-Route::get('/enseignant/fiche_note',function(){
-    $enseignant = session('enseignant');
-    if (!$enseignant) {
-        return redirect()->route('enseignant.auth.login')->with('error', 'Veuillez vous connecter d\'abord.');
-    }
-
-    $classes = Classe::all();
-    $matieres = Matieres::all();
-
-    return view('enseignant.fiche_note', compact('enseignant', 'matieres', 'classes'));
-})->name('create');
-Route::get('/enseignant/composition/index', [CompositionController::class, 'index'])->name('composition.index');
-Route::post('/enseignant/composition', [CompositionController::class, 'store'])->name('composition.store');
+//ROUTE POUR LES COMPOSITIONS
+// Route::get('/enseignant/composition', [CompositionController::class, 'index'])->name('composition.index');
+// Route::get('/enseignant/composition/create', function () {
+//     $enseignant = session('enseignant');
+//     $classes = Classe::all();
+//     $matieres = Matieres::all();
+//     return view('enseignant.composition.create', compact('enseignant', 'classes', 'matieres'));
+// })->name('composition.create');
+// Route::post('/enseignant/composition', [CompositionController::class, 'store'])->name('composition.store');
+// Route::resource('composition', CompositionController::class);
+Route::get('/enseignant/composition', function () {
+    return view('enseignant.composition.index');
+})->name('composition.index');

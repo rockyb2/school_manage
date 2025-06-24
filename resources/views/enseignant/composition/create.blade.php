@@ -11,9 +11,9 @@
         <form action="{{ route('composition.store') }}" method="POST" class="space-y-6">
             @csrf
 
-            <x-input label="Titre de la composition" name="titre" placeholder="Ex: Composition Trimestre 1" required />
+            <x-input label="Titre de la composition" class="text-xl p-2 border-1 border-gray-300" name="titre" placeholder="Ex: Composition Trimestre 1" required />
 
-            <x-input label="Date" name="date" type="date" required />
+            <x-input label="Date" name="date" class="border-1 text-xl p-2 border-gray-300" type="date" required />
 
             {{-- Sélection du type --}}
             <div>
@@ -21,7 +21,7 @@
                 <select name="type" id="type" required class="w-full border border-gray-300 rounded-md p-2">
                     <option value="">-- Sélectionner --</option>
                     <option value="examen">Examen</option>
-                    <option value="composition">Composition</option>
+                    <option value="composition">Evaluation</option>
                 </select>
             </div>
 
