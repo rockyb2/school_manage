@@ -4,7 +4,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Compositions;
-use Livewire\Attributes\On; // facultatif pour les listeners
+use App\Models\Notes;
 
 class CompositionCrud extends Component
 {
@@ -20,6 +20,10 @@ class CompositionCrud extends Component
     public $matieres;
     public $showModal = false;
     public $isEditMode = false;
+    public $showNoteModal = false;
+    public $etudiants = [];
+    public $notes = [];
+    public $compositionSelectionnee;
     public function render()
     {
         return view('livewire.composition-crud');
@@ -127,14 +131,16 @@ class CompositionCrud extends Component
         $this->compositions = \App\Models\Compositions::with(['classe', 'matiere'])->get();
     }
 
-    #[On('delete')]
+
     public function delete($id)
     {
-        Compositions::findOrFail($id)->delete();
+        $composition = Compositions::findOrFail($id);
+        $composition->delete();
+
         $this->dispatch('swal', [
-            'title' => 'Supprimée',
+            'title' => 'Supprimé',
             'text' => 'Composition supprimée avec succès.',
-            'icon' => 'success'
+            'icon' => 'warning'
         ]);
         $this->compositions = \App\Models\Compositions::with(['classe', 'matiere'])->get();
     }
@@ -143,7 +149,48 @@ class CompositionCrud extends Component
     public function mount()
     {
         $this->classes = \App\Models\Classe::all();
-    $this->matieres = \App\Models\Matieres::all();
-    $this->compositions = \App\Models\Compositions::with(['classe', 'matiere'])->get();
+        $this->matieres = \App\Models\Matieres::all();
+        $this->compositions = \App\Models\Compositions::with(['classe', 'matiere'])->get();
+    }
+
+
+    public function addNote($composition_id)
+    {
+        $composition = Compositions::findOrFail($composition_id);
+        $this->compositionSelectionnee = $composition;
+        // Récupère les étudiants de la classe liée à la composition
+        $this->etudiants = $composition->classe->etudiants ?? [];
+        // Initialise les notes existantes ou vides
+        $this->notes = [];
+        foreach ($this->etudiants as $etudiant) {
+            $note = \App\Models\Notes::where('etudiant_id', $etudiant->id)
+                ->where('composition_id', $composition_id)
+                ->first();
+            $this->notes[$etudiant->id] = $note ? $note->note : '';
+        }
+        $this->showNoteModal = true;
+    }
+
+    public function saveNotes()
+    {
+        foreach ($this->notes as $etudiant_id => $note) {
+            if ($note !== '' && $note !== null) {
+                \App\Models\Notes::updateOrCreate(
+                    [
+                        'etudiant_id' => $etudiant_id,
+                        'composition_id' => $this->compositionSelectionnee->id,
+                    ],
+                    [
+                        'note' => $note,
+                    ]
+                );
+            }
+        }
+        $this->showNoteModal = false;
+        $this->dispatch('swal', [
+            'title' => 'Succès',
+            'text' => 'Notes enregistrées avec succès.',
+            'icon' => 'success'
+        ]);
     }
 }
