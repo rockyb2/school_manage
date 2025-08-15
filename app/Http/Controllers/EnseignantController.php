@@ -26,17 +26,9 @@ public function login(Request $request)
         'mot_de_passe' => 'required',
     ]);
 
-    $enseignantEmail = Enseignant::where('email', $request->email)
-                            ->first();
-
-                            if($enseignantEmail){
-                                $enseignant = Enseignant::where('mot_de_passe', $request->mot_de_passe)
-                                ->first();
-                            }else{
-                                return back()->withInput()->withErrors([
-                                    'email' => 'L\'email ou le mot de passe ne correspond pas',
-                                ]);
-                            }
+    $enseignant = Enseignant::where('email', $request->email)
+        ->where('mot_de_passe', $request->mot_de_passe)
+        ->first();
 
     if ($enseignant) {
         $request->session()->put('enseignant', $enseignant);
@@ -66,7 +58,7 @@ public function login(Request $request)
     public function logout(Request $request)
     {
         $request->session()->forget('enseignant');
-        return redirect('/');
+        return redirect('login')->with('success', 'Déconnexion réussie.');
     }
 
     public function sendEmploisDuTempsNotification()

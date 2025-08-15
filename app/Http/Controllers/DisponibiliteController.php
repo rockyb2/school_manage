@@ -52,6 +52,28 @@ class DisponibiliteController extends Controller
             return redirect()->route('login')->withErrors(['message' => 'Veuillez vous connecter.']);
         }
 
+        $erreurs = [];
+        foreach ($request->jour as $jour) {
+            foreach ($request->periode as $periode) {
+                $existe = Disponibilite::where('enseignant_id', $enseignant->id)
+                    ->where('Jour', $jour)
+                    ->where('periode', $periode)
+                    ->exists();
+
+                if ($existe) {
+                    $erreurs[] = "La disponibilité pour le jour $jour et la période $periode existe déjà.";
+                }
+            }
+        }
+
+        if (!empty($erreurs)) {
+            return redirect()->back()->withErrors($erreurs);
+        }
+
+        // Enregistrer les disponibilités
+
+
+
         foreach($request->jour as $jour){
             foreach($request->periode as $periode){
                 Disponibilite::create([

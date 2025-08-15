@@ -21,7 +21,7 @@ class ClasseResource extends Resource
 {
     protected static ?string $model = Classe::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-book-open';
 
     public static function form(Form $form): Form
     {
@@ -35,10 +35,7 @@ class ClasseResource extends Resource
                 ->label('Nom de la Classe')
                 ->required()
                 ->maxLength(100),
-            TextInput::make('nb_etudiants')
-                ->label('Nombre d’Étudiants')
-                ->numeric()
-                ->required(),
+
             ]);
     }
 
@@ -52,9 +49,7 @@ class ClasseResource extends Resource
             TextColumn::make('filiere.nom_filiere') // Relation et champ lié
                 ->label('Filière')
                 ->sortable(),
-            TextColumn::make('nb_etudiants')
-                ->label('Nombre d’Étudiants')
-                ->sortable(),
+            
             ])
             ->filters([
                 //

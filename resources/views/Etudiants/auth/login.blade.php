@@ -21,19 +21,13 @@
         </div>
         @endif
 
-        <form action="{{route('login')}}" method="post">
+        <form action="{{ route('etudiant.auth.login') }}" method="post">
             <h1 class="text-3xl font-bold mb-6 text-center">Connexion</h1>
             @csrf
             <div class="mb-4">
-                <input type="email" name="email" id="email" class="outline-none border-b-2 w-full p-2" placeholder="email" required>
-            </div>
-            <div class="mb-4">
-                <input type="password" name="mot_de_passe" id="password" class="outline-none border-b-2 w-full p-2" placeholder="mot de passe" required>
+                <input type="text" name="matricule" id="matricule" class="outline-none border-b-2 w-full p-2" placeholder="Matricule" required>
             </div>
             <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Se connecter</button>
-            <div class="mt-2 text-right">
-                <a href="{{ route('enseignant.forgot_password') }}" class="text-blue-600 hover:underline text-sm">Mot de passe oublié ?</a>
-            </div>
         </form>
     </div>
 </body>

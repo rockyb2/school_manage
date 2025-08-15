@@ -9,6 +9,7 @@ use App\Http\Controllers\CompositionController;
 use App\Models\Classe;
 use App\Models\Matieres;
 use App\Livewire\CompositionCrud;
+use App\Http\Controllers\EtudiantsController;
 
 Route::get('/', function () {
     return view('filament.index');
@@ -50,3 +51,28 @@ Route::get('/generate-pdf', [PdfController::class, 'generatePdf'])->name('genera
 Route::get('/enseignant/composition', function () {
     return view('enseignant.composition.index');
 })->name('composition.index');
+
+Route::get('/enseignant/notes', [App\Http\Controllers\NoteController::class, 'index'])->name('notes.index');
+
+Route::post('/logout', [\App\Http\Controllers\EnseignantController::class, 'logout'])->name('logout');
+
+Route::get('/enseignant/forgot-password', [EnseignantController::class, 'showForgotPasswordForm'])->name('enseignant.forgot_password');
+Route::post('/enseignant/forgot-password', [EnseignantController::class, 'sendResetLink']);
+
+
+// etudiant
+Route::get('/etudiant/auth/login', [EtudiantsController::class, 'showLoginForm'])->name('etudiant.auth.login');
+Route::post('/etudiant/auth/login', [EtudiantsController::class, 'login']);
+Route::get('/etudiant/logout', [EtudiantsController::class, 'logout'])->name('etudiant.logout');
+
+Route::get('/etudiant/dashboard', function () {
+    $etudiant = session('etudiant');
+    return view('Etudiants.dashboard', compact('etudiant'));
+})->name('etudiant.dashboard');
+
+Route::get('/etudiant/emplois_du_temps', [EtudiantsController::class, 'emploisDuTemps'])->name('etudiant.emplois_du_temps');
+Route::get('/etudiant/notes', [EtudiantsController::class, 'notes'])->name('etudiant.notes');
+
+Route::get('/etudiant/dashboard', [EtudiantsController::class, 'getMoyenne'])->name('etudiant.dashboard');
+
+Route::get('/etudiant/emplois-du-temps/pdf', [EtudiantsController::class, 'downloadEmploisDuTemps'])->name('etudiant.emplois_du_temps_pdf');

@@ -148,7 +148,7 @@ class EtudiantsResource extends Resource
                         FileUpload::make('photo')
                             ->label('Photo de l\'Étudiant')
                             ->image()
-
+                            ->maxSize('3072')
                             ->required()
                             ->directory('etudiants_photos'),
                     ]),

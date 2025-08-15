@@ -5,6 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\Compositions;
 use App\Models\Notes;
+use Illuminate\Support\Facades\DB;
 
 class CompositionCrud extends Component
 {
@@ -56,7 +57,7 @@ class CompositionCrud extends Component
         $this->validate([
             'titre' => 'required|string|max:255',
             'date' => 'required|date',
-            'type' => 'required|in:examen,composition',
+            'type' => 'required',
             'classe_id' => 'required|exists:classes,id',
             'matiere_id' => 'required|exists:matieres,id',
         ]);
@@ -86,7 +87,9 @@ class CompositionCrud extends Component
         ]);
         $this->closeModal();
         $this->resetFields();
-        $this->compositions = \App\Models\Compositions::with(['classe', 'matiere'])->get();
+        $this->compositions = \App\Models\Compositions::with(['classe', 'matiere'])
+            ->where('enseignant_id', $enseignant->id)
+            ->get();
     }
 
     public function edit($id)
@@ -128,7 +131,10 @@ class CompositionCrud extends Component
         ]);
         $this->closeModal();
         $this->resetFields();
-        $this->compositions = \App\Models\Compositions::with(['classe', 'matiere'])->get();
+        $enseignant = session('enseignant');
+        $this->compositions = \App\Models\Compositions::with(['classe', 'matiere'])
+            ->where('enseignant_id', $enseignant->id)
+            ->get();
     }
 
 
@@ -142,15 +148,40 @@ class CompositionCrud extends Component
             'text' => 'Composition supprimée avec succès.',
             'icon' => 'warning'
         ]);
-        $this->compositions = \App\Models\Compositions::with(['classe', 'matiere'])->get();
+        $enseignant = session('enseignant');
+        $this->compositions = \App\Models\Compositions::with(['classe', 'matiere'])
+            ->where('enseignant_id', $enseignant->id)
+            ->get();
     }
 
 
     public function mount()
     {
-        $this->classes = \App\Models\Classe::all();
-        $this->matieres = \App\Models\Matieres::all();
-        $this->compositions = \App\Models\Compositions::with(['classe', 'matiere'])->get();
+        $enseignant = session('enseignant');
+        if (!$enseignant) {
+            $this->classes = [];
+            $this->matieres = [];
+            $this->compositions = [];
+        } else {
+            $this->classes = DB::table('classes')
+                ->join('cours', 'classes.id', '=', 'cours.classe_id')
+                ->where('cours.enseignant_id', $enseignant->id)
+                ->select('classes.nom_classe', 'classes.id')
+                ->distinct()
+                ->get();
+
+            $this->matieres = DB::table('matieres')
+                ->join('cours', 'matieres.id', '=', 'cours.matiere_id')
+                ->where('cours.enseignant_id', $enseignant->id)
+                ->select('matieres.nom_matiere', 'matieres.id')
+                ->distinct()
+                ->get();
+
+            // Filtrer les compositions par enseignant connecté
+            $this->compositions = \App\Models\Compositions::with(['classe', 'matiere'])
+                ->where('enseignant_id', $enseignant->id)
+                ->get();
+        }
     }
 
 

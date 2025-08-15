@@ -26,7 +26,7 @@
                 <td class="border px-4 py-2">{{ $composition->classe->nom_classe ?? '' }}</td>
                 <td class="border px-4 py-2">{{ $composition->matiere->nom_matiere ?? '' }}</td>
                 <td class="border px-4 py-2 flex justify-around">
-                    <button wire:click="edit({{ $composition->id }})" class="bg-blue-500 text-white p-2 rounded">Modifier</button>
+                    <button wire:click="edit({{ $composition->id }})" class="bg-yellow-400 text-white  rounded hover:bg-yellow-500 transition p-2 ">Modifier</button>
                     <button wire:click="delete({{ $composition->id }})" class="bg-red-500 text-white px-2 py-1 rounded">
                         Supprimer
                     </button>
@@ -96,16 +96,17 @@
             <button wire:click="$set('showNoteModal', false)" class="absolute top-2 right-2 text-gray-500 hover:text-red-500 text-xl">&times;</button>
             <h2 class="text-xl font-bold mb-4">Attribuer une note - {{ $compositionSelectionnee->titre ?? '' }}</h2>
             <form wire:submit.prevent="saveNotes">
-                <table class="min-w-full bg-white mb-4">
-                    <thead>
-                        <tr>
-                            <th class="py-2">Nom</th>
-                            <th class="py-2">Prénoms</th>
-                            <th class="py-2">Note</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($etudiants as $etudiant)
+                <div class="max-h-[400px] overflow-y-auto mb-4">
+                    <table class="min-w-full bg-white">
+                        <thead>
+                            <tr>
+                                <th class="py-2">Nom</th>
+                                <th class="py-2">Prénoms</th>
+                                <th class="py-2">Note</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($etudiants as $etudiant)
                             <tr>
                                 <td class="border px-4 py-2">{{ $etudiant->nom }}</td>
                                 <td class="border px-4 py-2">{{ $etudiant->prenoms }}</td>
@@ -115,9 +116,10 @@
                                         class="border rounded p-1 w-20" required>
                                 </td>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
                 <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-all duration-300">
                     Enregistrer les notes
                 </button>
