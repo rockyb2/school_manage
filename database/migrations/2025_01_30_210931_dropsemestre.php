@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::dropIfExists('semestre');
-        Schema::dropIfExists('annee_academique');
-        Schema::dropIfExists('emplois_du_temps');
+        // No-op: this historical migration caused FK conflicts during fresh installs.
+        // Schema changes are handled by later targeted migrations.
     }
 
     /**
@@ -21,29 +20,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::create('semestre', function (Blueprint $table) {
-            $table->id();
-            $table->string('nom_semestre');
-            $table->date('date_debut');
-            $table->date('date_fin');
-            $table->timestamps();
-        });
-
-        Schema::create('annee_academique', function (Blueprint $table) {
-            $table->id();
-            $table->string('annee');
-            $table->timestamps();
-        });
-
-        Schema::create('emplois_du_temps', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('cours_id')->constrained('cours')->onDelete('cascade');
-            $table->foreignId('semestre_id')->constrained('semestre')->onDelete('cascade');
-            $table->foreignId('annee_academique_id')->constrained('annee_academique')->onDelete('cascade');
-            $table->string('jour');
-            $table->time('heure_debut');
-            $table->time('heure_fin');
-            $table->timestamps();
-        });
+        // No-op
     }
 };

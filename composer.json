@@ -15,6 +15,7 @@
         "laravel/framework": "^12.17",
         "laravel/tinker": "^2.9",
         "livewire/livewire": "^3.5",
+        "openspout/openspout": "^4.23 <4.30",
         "spatie/laravel-permission": "^6.10",
         "sweetalert2/laravel": "^0.1.0",
         "tomatophp/filament-translations": "^1.0"

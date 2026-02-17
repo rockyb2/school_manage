@@ -1,53 +1,96 @@
 <?php
+
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Enseignant;
-use Illuminate\Support\Facades\DB;
+use App\Models\User;
 use App\Notifications\EmptNotification;
-use Illuminate\Support\Facades\Notification;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class EnseignantController extends Controller
 {
     public function showLoginForm()
     {
-        if (session()->has('enseignant')) {
+        if (Auth::check() && Auth::user()->role === 'enseignant') {
             return redirect()->route('dashboard');
         }
+
         return view('enseignant.auth.login');
     }
 
+    public function login(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'mot_de_passe' => 'required',
+        ]);
 
-public function login(Request $request)
-{
-    $request->validate([
-        'email' => 'required|email',
-        'mot_de_passe' => 'required',
-    ]);
+        $user = User::where('email', $request->email)->where('role', 'enseignant')->first();
+        if (!$user) {
+            return back()->withInput()->withErrors([
+                'email' => 'L\'email ou le mot de passe ne correspond pas',
+            ]);
+        }
 
-    $enseignant = Enseignant::where('email', $request->email)
-        ->where('mot_de_passe', $request->mot_de_passe)
-        ->first();
+        $isValidPassword = Hash::check($request->mot_de_passe, $user->password);
 
-    if ($enseignant) {
+        if (!$isValidPassword) {
+            // Compatibility for legacy plaintext password stored in enseignants.mot_de_passe.
+            $enseignantLegacy = Enseignant::where('email', $request->email)->first();
+            if ($enseignantLegacy && !empty($enseignantLegacy->mot_de_passe) && $enseignantLegacy->mot_de_passe === $request->mot_de_passe) {
+                $user->password = Hash::make($request->mot_de_passe);
+                $user->save();
+                $isValidPassword = true;
+            }
+        }
+
+        if (!$isValidPassword) {
+            return back()->withInput()->withErrors([
+                'email' => 'L\'email ou le mot de passe ne correspond pas',
+            ]);
+        }
+
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        $enseignant = $user->enseignant;
+        if (!$enseignant) {
+            Auth::logout();
+            return back()->withInput()->withErrors([
+                'email' => 'Profil enseignant introuvable pour ce compte.',
+            ]);
+        }
+
         $request->session()->put('enseignant', $enseignant);
+
         return redirect()->route('dashboard');
     }
 
-    return back()->withInput()->withErrors([
-        'email' => 'L\'email ou le mot de passe ne correspond pas',
-    ]);
-}
+    public function showForgotPasswordForm()
+    {
+        return view('enseignant.auth.login')->with('success', 'Contactez l\'administration pour reinitialiser votre mot de passe.');
+    }
+
+    public function sendResetLink(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        return back()->with('success', 'Si le compte existe, la demande a ete prise en charge par l\'administration.');
+    }
 
     public function dashboard()
     {
-        $enseignant = session('enseignant');
+        $enseignant = $this->getCurrentEnseignant();
         if (!$enseignant) {
             return redirect()->route('login')->withErrors(['message' => 'Veuillez vous connecter.']);
         }
 
-        // Calcul du total de cours
         $totalCours = DB::table('cours')
             ->where('enseignant_id', $enseignant->id)
             ->count();
@@ -58,7 +101,11 @@ public function login(Request $request)
     public function logout(Request $request)
     {
         $request->session()->forget('enseignant');
-        return redirect('login')->with('success', 'Déconnexion réussie.');
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('login')->with('success', 'Deconnexion reussie.');
     }
 
     public function sendEmploisDuTempsNotification()
@@ -66,30 +113,27 @@ public function login(Request $request)
         $enseignants = Enseignant::all();
 
         foreach ($enseignants as $enseignant) {
-            // Envoyer la notification
             $enseignant->notify(new EmptNotification());
         }
 
-        return back()->with('success', 'Notifications envoyées avec succès.');
+        return back()->with('success', 'Notifications envoyees avec succes.');
     }
 
     public function downloadEmploiDuTemps()
     {
-        $enseignant = session('enseignant');
+        $enseignant = $this->getCurrentEnseignant();
         if (!$enseignant) {
             return redirect()->route('login')->withErrors(['message' => 'Veuillez vous connecter.']);
         }
 
-        // Récupérer les données de l'emploi du temps de l'enseignant
         $emploisDuTemps = $this->getEmploisDuTemps($enseignant->id);
         $anneeSemestre = [
-            'annee_academique' => '2023-2024', // Remplacez par les données réelles
-            'semestre_nom' => 'Semestre 1', // Remplacez par les données réelles
+            'annee_academique' => '2023-2024',
+            'semestre_nom' => 'Semestre 1',
         ];
         $jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
 
-        // Générer le PDF
-        $pdf = PDF::loadView('enseignant.emplois_du_temps_pdf', [
+        $pdf = Pdf::loadView('enseignant.emplois_du_temps_pdf', [
             'emploisDuTemps' => $emploisDuTemps,
             'anneeSemestre' => $anneeSemestre,
             'jours' => $jours,
@@ -124,7 +168,6 @@ public function login(Request $request)
             )
             ->get();
 
-        // Grouper les résultats par jour et par créneau horaire
         $grouped = [];
         foreach ($results as $cour) {
             $horaire = $cour->heure_debut . '-' . $cour->heure_fin;
@@ -136,16 +179,15 @@ public function login(Request $request)
 
     public function showEmploisDuTemps()
     {
-        $enseignant = session('enseignant');
+        $enseignant = $this->getCurrentEnseignant();
         if (!$enseignant) {
             return redirect()->route('login')->withErrors(['message' => 'Veuillez vous connecter.']);
         }
 
-        // Utilisation de la méthode qui retourne la structure groupée
         $emploisDuTemps = $this->getEmploisDuTemps($enseignant->id);
         $anneeSemestre = [
-            'annee_academique' => '2025', // ou vos données réelles
-            'semestre_nom' => 'Semestre 2', // ou vos données réelles
+            'annee_academique' => '2025',
+            'semestre_nom' => 'Semestre 2',
         ];
         $jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
 
@@ -154,7 +196,7 @@ public function login(Request $request)
 
     public function getTotalCour()
     {
-        $enseignant = session('enseignant');
+        $enseignant = $this->getCurrentEnseignant();
         if (!$enseignant) {
             return redirect()->route('login')->withErrors(['message' => 'Veuillez vous connecter.']);
         }
@@ -164,12 +206,11 @@ public function login(Request $request)
             ->count();
 
         return response()->json(['total_cours' => $totalCours]);
-
     }
 
     public function getListClasses()
     {
-        $enseignant = session('enseignant');
+        $enseignant = $this->getCurrentEnseignant();
         if (!$enseignant) {
             return redirect()->route('login')->withErrors(['message' => 'Veuillez vous connecter.']);
         }
@@ -184,6 +225,20 @@ public function login(Request $request)
         return view('enseignant.classes_list', compact('classes'));
     }
 
+    private function getCurrentEnseignant(): ?Enseignant
+    {
+        $user = Auth::user();
 
+        if ($user && $user->role === 'enseignant' && $user->enseignant) {
+            session()->put('enseignant', $user->enseignant);
+            return $user->enseignant;
+        }
 
+        $fromSession = session('enseignant');
+        if ($fromSession instanceof Enseignant) {
+            return $fromSession;
+        }
+
+        return null;
+    }
 }

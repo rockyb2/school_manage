@@ -11,11 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('emplois_du_temps', function (Blueprint $table) {
-            $table->foreignId('cours_id')->constrained('cours')->onDelete('cascade')->after('id');
-            $table->foreignId('semestre_id')->constrained('semestre')->onDelete('cascade')->after('cours_id');
-            $table->foreignId('annee_academique_id')->constrained('annee_academique')->onDelete('cascade')->after('semestre_id');
-        });
+        if (!Schema::hasColumn('emplois_du_temps', 'cours_id')) {
+            Schema::table('emplois_du_temps', function (Blueprint $table) {
+                $table->foreignId('cours_id')->constrained('cours')->onDelete('cascade')->after('id');
+            });
+        }
+
+        if (!Schema::hasColumn('emplois_du_temps', 'semestre_id')) {
+            Schema::table('emplois_du_temps', function (Blueprint $table) {
+                $table->foreignId('semestre_id')->constrained('semestre')->onDelete('cascade')->after('cours_id');
+            });
+        }
+
+        if (!Schema::hasColumn('emplois_du_temps', 'annee_academique_id')) {
+            Schema::table('emplois_du_temps', function (Blueprint $table) {
+                $table->foreignId('annee_academique_id')->constrained('annee_academique')->onDelete('cascade')->after('semestre_id');
+            });
+        }
     }
 
     /**
@@ -23,10 +35,22 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('emplois_du_temps', function (Blueprint $table) {
-            $table->dropColumn('cours_id');
-            $table->dropColumn('semestre_id');
-            $table->dropColumn('annee_academique_id');
-        });
+        if (Schema::hasColumn('emplois_du_temps', 'annee_academique_id')) {
+            Schema::table('emplois_du_temps', function (Blueprint $table) {
+                $table->dropConstrainedForeignId('annee_academique_id');
+            });
+        }
+
+        if (Schema::hasColumn('emplois_du_temps', 'semestre_id')) {
+            Schema::table('emplois_du_temps', function (Blueprint $table) {
+                $table->dropConstrainedForeignId('semestre_id');
+            });
+        }
+
+        if (Schema::hasColumn('emplois_du_temps', 'cours_id')) {
+            Schema::table('emplois_du_temps', function (Blueprint $table) {
+                $table->dropConstrainedForeignId('cours_id');
+            });
+        }
     }
 };

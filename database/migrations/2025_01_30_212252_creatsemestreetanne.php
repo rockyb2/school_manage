@@ -11,19 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('semestre', function (Blueprint $table) {
-            $table->id();
-            $table->string('nom_semestre');
-            $table->date('date_debut');
-            $table->date('date_fin');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('semestre')) {
+            Schema::create('semestre', function (Blueprint $table) {
+                $table->id();
+                $table->string('nom_semestre');
+                $table->date('date_debut');
+                $table->date('date_fin');
+                $table->timestamps();
+            });
+        }
 
-        Schema::create('annee_academique', function (Blueprint $table) {
-            $table->id();
-            $table->string('annee');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('annee_academique')) {
+            Schema::create('annee_academique', function (Blueprint $table) {
+                $table->id();
+                $table->string('annee');
+                $table->timestamps();
+            });
+        }
 
     }
 

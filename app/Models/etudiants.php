@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
 
 class Etudiants extends Model
@@ -10,6 +11,7 @@ class Etudiants extends Model
     /** @use HasFactory<\Database\Factories\EtudiantsFactory> */
     use HasFactory;
     protected $fillable = [
+        'user_id',
         'classe_id',
         'matricule',
         'nom',
@@ -34,6 +36,11 @@ class Etudiants extends Model
     public function classe()
     {
         return $this->belongsTo(Classe::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     protected static function booted()

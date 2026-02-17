@@ -11,12 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('emplois_du_temps',function(Blueprint $table){
+        if (Schema::hasColumn('emplois_du_temps', 'cours_id')) {
+            Schema::table('emplois_du_temps', function (Blueprint $table) {
+                $table->dropConstrainedForeignId('cours_id');
+            });
+        }
 
-            $table->dropColumn('cours_id');
-
-            $table->dropColumn('annee_academique_id');
-        });
+        if (Schema::hasColumn('emplois_du_temps', 'annee_academique_id')) {
+            Schema::table('emplois_du_temps', function (Blueprint $table) {
+                $table->dropConstrainedForeignId('annee_academique_id');
+            });
+        }
     }
 
     /**
